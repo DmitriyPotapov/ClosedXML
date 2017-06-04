@@ -1310,6 +1310,114 @@ namespace ClosedXML.Excel
                 return false;
             }
         }
+
+        public Boolean TryGetCachedValue<T>(out T value)
+        {
+            var currValue = ValueCached;
+
+            if (string.IsNullOrEmpty(currValue) || string.IsNullOrWhiteSpace(currValue) && typeof(T) != typeof(string))
+            {
+                var fA1 = FormulaA1;
+                if (XLHelper.IsNullOrWhiteSpace(fA1) && Value != null)
+                {
+                    try
+                    {
+                        currValue = Value.ToString();
+                    }
+                    catch
+                    {
+                        value = default(T);
+                        return false;
+                    }
+                }
+                else
+                {
+                    value = default(T);
+                    return false;
+                }
+            }
+
+            if (typeof(T) == typeof(bool))
+            {
+                if (currValue == "0" || currValue == "1")
+                {
+                    value = (T)Convert.ChangeType(currValue != "0", typeof(T));
+                    return true;
+                }
+            }
+
+
+            if (typeof(T) == typeof(DateTime))
+            {
+                Double d;
+                if (Double.TryParse(currValue, XLHelper.NumberStyle, XLHelper.ParseCulture, out d)
+                    && d.IsValidOADateNumber())
+                {
+                    value = (T)Convert.ChangeType(DateTime.FromOADate(d), typeof(T));
+                    return true;
+                }
+            }
+
+            if (typeof(T) == typeof(float) ||
+                 typeof(T) == typeof(double) ||
+                 typeof(T) == typeof(decimal) ||
+                 typeof(T) == typeof(int) ||
+                 typeof(T) == typeof(short))
+            {
+                Double doubleValue;
+                if (double.TryParse(currValue, XLHelper.NumberStyle, XLHelper.ParseCulture, out doubleValue))
+                {
+                    try
+                    {
+                        value = (T)Convert.ChangeType(doubleValue, typeof(T));
+                        return true;
+                    }
+                    catch
+                    {
+                        value = default(T);
+                        return false;
+                    }
+
+                }
+
+            }
+
+            if (typeof(T) == typeof(TimeSpan))
+            {
+                TimeSpan timeSpan;
+                if (TimeSpan.TryParse(currValue, out timeSpan))
+                {
+                    try
+                    {
+                        value = (T)Convert.ChangeType(timeSpan, typeof(T));
+                        return true;
+                    }
+                    catch
+                    {
+                        value = default(T);
+                        return false;
+                    }
+                }
+            }
+
+            if (typeof(T) == typeof(string))
+            {
+                value = (T)Convert.ChangeType(currValue, typeof(T));
+                return true;
+            }
+
+            try
+            {
+                value = (T)Convert.ChangeType(currValue, typeof(T));
+                return true;
+            }
+            catch
+            {
+                value = default(T);
+                return false;
+            }
+        }
+
         private static bool TryGetExcelSerialDate<T>(out T value, object currValue, out bool b)
         {
             if (typeof(T) == typeof(DateTime))

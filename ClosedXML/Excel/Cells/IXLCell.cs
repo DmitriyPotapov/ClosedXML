@@ -114,7 +114,7 @@ namespace ClosedXML.Excel
         XLHyperlink GetHyperlink();
 
         Boolean TryGetValue<T>(out T value);
-
+        Boolean TryGetCachedValue<T>(out T value);
 
 
         Boolean HasHyperlink { get; }
